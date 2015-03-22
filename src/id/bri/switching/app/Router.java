@@ -26,6 +26,7 @@ import id.bri.switching.helper.TextUtil;
 
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.util.Map;
 
 import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOMsg;
@@ -72,42 +73,51 @@ public class Router {
         		// bit 3: Proc. code; bit 48: Card Number
             	// bit x: Status Code, bit y: Flag Card
         		// bit 63: TrxAmtTotal & PointValue (point * 100)
-            	String cardNum = isoMsg.getString(3).trim();
-            	String blockCode = isoMsg.getString(4).trim();
-            	String statusCode = isoMsg.getString(5).trim();
-            	String flag = isoMsg.getString(6).trim();
-            	String pointAmt = isoMsg.getString(7).trim();
+            	String cardNum = isoMsg.getString(2).trim();
+            	String pointAmt = isoMsg.getString(4).trim();
             	
             	//if( isoMsg.getString(3).trim().equals("101010") && 
             	//    isoMsg.getString(63).trim().equals("POINT")  )
             	if(isoMsg.getString(3).trim().equals("101010")) {
-            		// Transaction
+            		// TRANSACTION
             		String tblName = "lbcrdext";
             		// Relay to PSW 
             		// Redeem & Update point balance within a purchase
             		PointRedeem pointRedeem = new PointRedeem();
-            		String resDeb = pointRedeem.debetPoint(cardNum, tblName, pointAmt);
+            		Map resDeb = pointRedeem.debetPoint(cardNum, tblName, pointAmt);
             		
-            		if(resDeb != ""){
+            		if(!resDeb.isEmpty()){
+            			//Set ISOMsg back with Card's Info - Obtain them via Map resDeb Object
+            			//Iterator
             			isoMsg.set(39, "39");
                         isoMsg.set(40, rc.getResponseDescription("40"));
+                        
+                        resDeb.clear();
             		}else{
-            			//Update failed.
+            			//Update is failed.
             		}
             	}
             	else if(isoMsg.getString(3).trim().equals("303030")) {
-            		// Inquiry
+            		// INQUIRY
             		String tblName = "lbccpcrd";
-            		// Read: DB, Find: status/eligibility of card 
-            		// Read: Point balance
+            		// Read: DB
+            		// Find: (1) Status/Eligibility of Card, (2) Point balance
             		Inquiry inq = new Inquiry();
-            		Boolean resInquiry = inq.inquiryPointCard(cardNum, tblName, blockCode, statusCode, flag);
+            		Map resInquiry = inq.inquiryPointCard(cardNum, tblName);
             		
-            		if(resInquiry){
+            		if(!resInquiry.isEmpty()){
+            			//Get the current point when cardStatus == OK
+            			PointRedeem pointRedeem = new PointRedeem();
+            			int pointOfCard = pointRedeem.inquiryPoint(cardNum, "lbcrdext");
+            			
+            			//Set ISOMsg back with Card's Status - Obtain them via Map resInquiry Object & pointOfCard
+            			isoMsg.set(38, String.valueOf(pointOfCard));
+            			//Iterator
             			isoMsg.set(39, "39");
                         isoMsg.set(40, rc.getResponseDescription("40"));
+                        resInquiry.clear();
             		}else{
-            			
+            			//Do something if there's no point available/Card is inactive/Card is not found
             		}
                 	
             	}

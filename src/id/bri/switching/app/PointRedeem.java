@@ -8,6 +8,8 @@ import java.sql.Timestamp;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Map;
+import java.util.HashMap;
 
 import id.bri.switching.helper.LogLoader;
 import id.bri.switching.helper.MysqlConnect;
@@ -18,11 +20,13 @@ public class PointRedeem {
 	Connection con;
 	MysqlConnect db;
 	String response;
+	Map<String, String> cardInfo;
 	
 	public PointRedeem(){
 		db = null;
 		con = null;
 		response = null;
+		cardInfo = new HashMap<String, String>();
 	}
 	
 	//Table: lbcrdext
@@ -59,7 +63,7 @@ public class PointRedeem {
     	return currPointBal;
     }
 	
-    public String debetPoint(String cardNum, String tblName, String pointAmt) throws SQLException {
+    public Map debetPoint(String cardNum, String tblName, String pointAmt) throws SQLException {
     	MysqlConnect db = null;
 		try {
 			db = new MysqlConnect(PropertiesLoader.getProperty("DB_NAME"));
@@ -85,14 +89,19 @@ public class PointRedeem {
             rows = prepStmt.executeUpdate();
         } catch (SQLException e ) {
         	response = "Error SQL exception Update Point : " + e.toString();
+        	e.printStackTrace();
     	}
         
         if(rows > 0){
         	String msgResponse = "UPDATE " + tblName + " Success in" + rows +" rows.";
-        	return "Sukses!";
+        	System.out.println("Point Redeem updates? " + msgResponse);
+        	cardInfo.put("cardNum", cardNum);
+        	cardInfo.put("cardPoint", String.valueOf(currPointBal));
+        	return cardInfo;
         }else{
         	String msgResponse = "UPDATE " + tblName + " Failed.";
-        	return "";
+        	System.out.println("Point Redeem updates? " + msgResponse);
+        	return cardInfo;
         }
         
 	}

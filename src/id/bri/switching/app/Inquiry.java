@@ -7,6 +7,8 @@ import java.sql.Timestamp;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 import id.bri.switching.helper.LogLoader;
 import id.bri.switching.helper.MsSqlConnect;
@@ -25,14 +27,16 @@ public class Inquiry {
 	String trxAmount;
 	String response;
 	Connection con;
+	Map<String, String> cardInfo;
 	
 	public Inquiry(){
 		pointBalance = "0";
 		response = "";
+		cardInfo = new HashMap<String, String>();
 	}
 	
 	//Table: lbccpcrd
-    public boolean inquiryPointCard(String cardNum, String tblName, String blockCode, String statusCode, String flag) throws SQLException {
+    public Map inquiryPointCard(String cardNum, String tblName) throws SQLException {
     	
     	ResultSet rs = null;
     	Statement stm = null;
@@ -59,11 +63,13 @@ public class Inquiry {
 	        }
     	
     	if (rs.next()) {
-            return true;
+    		cardInfo.put("cardNum", cardNum);
+        	cardInfo.put("cardStatus", "OK");
+            return cardInfo;
+         } else{
+        	 return cardInfo;
          }
-         else {
-        	 return false; 
-         }
+         
     	
 	}
 }
