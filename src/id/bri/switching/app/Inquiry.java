@@ -36,7 +36,7 @@ public class Inquiry {
 	}
 	
 	//Table: lbccpcrd
-    public Map inquiryPointCard(String cardNum, String tblName) throws SQLException {
+    public Map<String, String> inquiryPointCard(String cardNum, String tblName) throws SQLException {
     	
     	ResultSet rs = null;
     	Statement stm = null;

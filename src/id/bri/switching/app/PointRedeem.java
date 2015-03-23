@@ -63,7 +63,7 @@ public class PointRedeem {
     	return currPointBal;
     }
 	
-    public Map debetPoint(String cardNum, String tblName, String pointAmt) throws SQLException {
+    public Map<String, String> debetPoint(String cardNum, String tblName, String pointAmt) throws SQLException {
     	MysqlConnect db = null;
 		try {
 			db = new MysqlConnect(PropertiesLoader.getProperty("DB_NAME"));

@@ -84,13 +84,12 @@ public class Router {
             		// Relay to PSW 
             		// Redeem & Update point balance within a purchase
             		PointRedeem pointRedeem = new PointRedeem();
-            		Map resDeb = pointRedeem.debetPoint(cardNum, tblName, pointAmt);
+            		Map<String, String> resDeb = pointRedeem.debetPoint(cardNum, tblName, pointAmt);
             		
             		if(!resDeb.isEmpty()){
             			//Set ISOMsg back with Card's Info - Obtain them via Map resDeb Object
-            			//Iterator
-            			isoMsg.set(39, "39");
-                        isoMsg.set(40, rc.getResponseDescription("40"));
+            			isoMsg.set(2, (String) resDeb.get("cardNum"));
+            			isoMsg.set(4, (String) resDeb.get("cardPoint"));
                         
                         resDeb.clear();
             		}else{
@@ -103,7 +102,7 @@ public class Router {
             		// Read: DB
             		// Find: (1) Status/Eligibility of Card, (2) Point balance
             		Inquiry inq = new Inquiry();
-            		Map resInquiry = inq.inquiryPointCard(cardNum, tblName);
+            		Map<String, String> resInquiry = inq.inquiryPointCard(cardNum, tblName);
             		
             		if(!resInquiry.isEmpty()){
             			//Get the current point when cardStatus == OK
@@ -112,9 +111,8 @@ public class Router {
             			
             			//Set ISOMsg back with Card's Status - Obtain them via Map resInquiry Object & pointOfCard
             			isoMsg.set(38, String.valueOf(pointOfCard));
-            			//Iterator
-            			isoMsg.set(39, "39");
-                        isoMsg.set(40, rc.getResponseDescription("40"));
+            			isoMsg.set(2, (String) resInquiry.get("cardNum"));
+            			isoMsg.set(4, (String) resInquiry.get("cardStatus"));
                         resInquiry.clear();
             		}else{
             			//Do something if there's no point available/Card is inactive/Card is not found
