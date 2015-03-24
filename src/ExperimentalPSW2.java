@@ -2,6 +2,7 @@ import id.bri.switching.helper.ISO8583PSWPackager;
 
 import org.jpos.iso.ISOMsg;
 import org.jpos.iso.ISOException;
+import org.jpos.iso.packager.GenericPackager;
 
 import id.bri.switching.app.*;
 import id.bri.switching.helper.*;
@@ -12,7 +13,8 @@ public class ExperimentalPSW2 {
 
 	public static void main(String[] args) {
 		try{
-			ISO8583PSWPackager packager = new ISO8583PSWPackager();
+			//ISO8583PSWPackager packager = new ISO8583PSWPackager();
+			GenericPackager packager = new GenericPackager("packager/iso8583.xml");
 			ISOMsg isoMsg = new ISOMsg();
 	        isoMsg.setPackager(packager);
 	        String requestString = "0800822000000000000004000000000000000224200936083503002";
