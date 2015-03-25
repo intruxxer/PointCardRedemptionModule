@@ -66,7 +66,7 @@ public class Router {
             //  Hanya melayani MTI 200 & 800
             //  MTI 200 request, 800 
             if(isoMsg.getMTI().equals("0200")){
-            	LogLoader.setInfo(Router.class.getSimpleName(), "Verifying the message...");
+            	LogLoader.setInfo(Router.class.getSimpleName(), "Verifying the message..." + requestString);
             	// Business logic; bit 3 defines inquiry VS transaction
             	// Verify the dictionary to Mas Deni
             	// ----------------------------------------------------
@@ -74,29 +74,42 @@ public class Router {
             	// bit x: Status Code, bit y: Flag Card
         		// bit 63: TrxAmtTotal & PointValue (point * 100)
             	String cardNum = isoMsg.getString(2).trim();
-            	String pointAmt = isoMsg.getString(4).trim();
+            	String procCode = isoMsg.getString(3).trim();
+            	String trxAmt = isoMsg.getString(4).trim();
+            	
             	
             	//if( isoMsg.getString(3).trim().equals("101010") && 
             	//    isoMsg.getString(63).trim().equals("POINT")  )
-            	if(isoMsg.getString(3).trim().equals("101010")) {
+            	if(procCode.equals("101010")) {
+            		/* START
+            		 * 
             		// TRANSACTION
             		String tblName = "lbcrdext";
             		// Relay to PSW 
             		// Redeem & Update point balance within a purchase
+            		
             		PointRedeem pointRedeem = new PointRedeem();
-            		Map<String, String> resDeb = pointRedeem.debetPoint(cardNum, tblName, pointAmt);
+            		Map<String, String> resDeb = pointRedeem.debetPoint(cardNum, tblName, trxAmt);
             		
             		if(!resDeb.isEmpty()){
             			//Set ISOMsg back with Card's Info - Obtain them via Map resDeb Object
-            			isoMsg.set(2, (String) resDeb.get("cardNum"));
+            			isoMsg.set(2, cardNum);
             			isoMsg.set(4, (String) resDeb.get("cardPoint"));
                         
                         resDeb.clear();
             		}else{
             			//Update is failed.
             		}
+            		
+            		END */
+            		for(int i=1; i<=isoMsg.getMaxField(); i++){
+        	            if(isoMsg.hasField(i))
+        	                System.out.println(i+"='"+isoMsg.getString(i)+"'");
+        	        	}
+            		System.out.println("C:"+cardNum+"|PC:"+procCode+"|T:"+trxAmt);
+            		LogLoader.setInfo(Router.class.getSimpleName(), "Proc Code: 101010");
             	}
-            	else if(isoMsg.getString(3).trim().equals("303030")) {
+            	else if(procCode.equals("303030")) {
             		// INQUIRY
             		String tblName = "lbccpcrd";
             		// Read: DB
@@ -117,6 +130,8 @@ public class Router {
             		}else{
             			//Do something if there's no point available/Card is inactive/Card is not found
             		}
+            		
+            		LogLoader.setInfo(Router.class.getSimpleName(), "Proc Code: 303030");
                 	
             	}
             	

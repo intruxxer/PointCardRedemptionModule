@@ -1,5 +1,6 @@
 import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOMsg;
+import org.jpos.iso.packager.GenericPackager;
 
 import id.bri.switching.app.*;
 import id.bri.switching.helper.*;
@@ -11,6 +12,7 @@ public class ExperimentalPSW {
 	//public ExperimentalPSW(){
 		try{
 			ISO8583PSWPackager packager = new ISO8583PSWPackager();
+			//GenericPackager packager = new GenericPackager("packager/iso8583.xml");
 	        ISOMsg isoMsg = new ISOMsg();
 	        isoMsg.setPackager(packager);
 	        

@@ -56,7 +56,7 @@ public class MQServer implements MessageListener {
 	
 	public synchronized void openConnection(String mqUrl) {
         try {        	
-	    	//Koneksi ke activemq
+	    	//Koneksi ke activeMQ
 	    	ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(mqUrl);
 	    	this.connection = connectionFactory.createConnection();
 	        this.connection.start();
@@ -82,9 +82,14 @@ public class MQServer implements MessageListener {
 	    	}
 			this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);  
 			Destination requestQueue = this.session.createQueue(messageQueueRequest);
-			this.messageQueueProducer = messageQueueResponse;
 			MessageConsumer consumer = this.session.createConsumer(requestQueue);
 	        consumer.setMessageListener(this);
+	        
+			//This messageQueueProducer() is producer's instance being used later on  [when void onMessage() triggered],
+			//because void onMessage() is triggered automatically due to its nature as a must-be-override interface;
+			//This approach is carried out as a way of global variable for void onMessage() to determine
+			//MQ Topic to which an MQ Server will put a response to.
+			this.messageQueueProducer = messageQueueResponse;
 	        LogLoader.setInfo(MQServer.class.getSimpleName(), "Listener on");
 						
 		} catch (JMSException e) {
@@ -100,24 +105,35 @@ public class MQServer implements MessageListener {
             if (message instanceof TextMessage) {
                 TextMessage txtMsg = (TextMessage) message;
                 String messageText = txtMsg.getText();
+                //System.out.println(messageText);
                 
-                // Process the request from PWS.
-                // Upon unpacking from ISO to plain, primitive data type,
-                // digs out & play around with business logic in your DB apps;
-                // Which Router.startRouter()s to call?
+                // Calling Router() object to process the request from PWS.
+                // Here, ISOMessage is unpacked, extracted, and processed according to our business logic.
+                // Upon unpacking from ISO to data, it is then we can proceed for executing our business logics,
+                // Hence, dig out & play around with business logic in your DB apps;
                 String result = Router.startRouter(messageText);
-                                
-                if (!result.equals("")) {	// result not null, there is message to be send
+                //String result = "The Peak Message isThe Recently Published One"; -->For Testing only
+                
+                //System.out.println(result);
+                
+                // CHECK HERE; DO WE NEED TO SEND BACK?
+                // If result !=  empty, there is message to send back as response upon receiving message
+                // String result is the ISOMessage that needs to be sent as The Body of message
+                // The ISOMessage produced from Router() will be enveloped by within TextMessage response.
+                if (!result.equals("")) {	
 	                TextMessage response = this.session.createTextMessage(result);
+	                //ENVELOPING Process:
+	                //1. Connection
+	                if (this.session == null) {
+	                	session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);   
+	                }
+	                //2. Correlation ID
 	                //Set the correlation ID from the received message to be the correlation id of the response message
 	                //this lets the client identify which message this is a response to if it has more than
 	                //one outstanding message to the server
 	                response.setJMSCorrelationID(message.getJMSCorrelationID());
 	                
-	                if (this.session == null) {
-	                	session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);   
-	                }
-	                
+	                //3. Setup The Producer/Publisher
 	                //Setup a message producer to respond to messages from clients, we will get the destination
 	                //to send to from the JMSReplyTo header field from a Message
 	                Destination responseQueue = this.session.createQueue(this.messageQueueProducer);
@@ -126,7 +142,7 @@ public class MQServer implements MessageListener {
 	                
 	                //Send the response to the Destination              
 	    	        this.replyProducer.send(response);
-	    	        LogLoader.setInfo(MQServer.class.getSimpleName(), "Sending verification message success");
+	    	        LogLoader.setInfo(MQServer.class.getSimpleName(), "Sending verification message "+result+" is success");
                 } else {
                 	LogLoader.setInfo(MQServer.class.getSimpleName(), "There is incoming message, but no response needed");
                 }
