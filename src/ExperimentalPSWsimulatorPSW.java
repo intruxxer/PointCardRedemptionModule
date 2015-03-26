@@ -30,17 +30,17 @@ public class ExperimentalPSWsimulatorPSW {
 	        
 	        //Packing an ISO Message
 	        isoMsg.setMTI("0200"); //Type: Financial Req  (4)
-	        isoMsg.set(2, "   4259678945688902"); //CH No (19)
-			isoMsg.set(3, "101010"); //Trx code (12)
-			isoMsg.set(4, "   125000000"); //Trx Amt 1,25jt (12)
-			isoMsg.set(5, "   125000000"); //1,25jt Settlement (to Merchant) (12)
-			isoMsg.set(6, "   120000000"); //1,20jt Settlement (to CH) (12)
-			isoMsg.set(12,"150325");// Time (6)
+	        isoMsg.set(2, "   5259678945688902"); //CH No (19)
+			isoMsg.set(3, "101010"); //Trx/Proc code (6)
+			isoMsg.set(4, "    10500000"); //Trx Amt 1,25jt (12)
+			isoMsg.set(5, "    10500000"); //1,25jt Settlement (to Merchant) (12)
+			isoMsg.set(6, "     5520000"); //1,20jt Settlement (to CH) (12)
+			isoMsg.set(12,"150330");// Time (6)
 			isoMsg.set(24, "015"); //NII - Net Int'l Identifier (3)
 			isoMsg.set(39, "10"); //Response Code (2)
-			isoMsg.set(41, "          123456"); // Terminal ID (16)
-			isoMsg.set(42, "          12345"); //Merchant ID (15)
-			isoMsg.set(49, "IDR"); //Currency Trx (3)
+			isoMsg.set(41, "          123457"); // Terminal ID (16)
+			isoMsg.set(42, "          12346"); //Merchant ID (15)
+			isoMsg.set(49, "SGD"); //Currency Trx (3)
 			byte[] result = isoMsg.pack();
 			
 			// Produce output ISO 8583 Message String to IO stream

@@ -20,11 +20,11 @@ public class ExperimentalPSWactiveMQ {
 	// e.g. 3306 for MySQL [PortNo], 61616 for ActiveMQ
 	public static void main(String[] args) {
 		try{
-			String isoMessage = "";
-			ISO8583PSWPackager packager = new ISO8583PSWPackager();
+			//String isoMessage = "";
+			//ISO8583PSWPackager packager = new ISO8583PSWPackager();
 			//GenericPackager packager = new GenericPackager("packager/iso8583.xml");
-			ISOMsg isoMsg = new ISOMsg();
-	        isoMsg.setPackager(packager);
+			//ISOMsg isoMsg = new ISOMsg();
+	        //isoMsg.setPackager(packager);
 	        
 	        //******	PART 1 ******//
 	        //AS IF WE ARE PSW

@@ -2,7 +2,7 @@
  * Router
  *
  * Class yang berfungsi untuk memvalidasi tipe message dan mengarahkan kepada
- * class sub proses transaksi, seperti inquiry atau payment
+ * class sub proses transaksi, seperti inquiry atau payment/redemption
  *
  * @package		id.bri.switching.app
  * @author		PSD Team
@@ -24,7 +24,11 @@ import id.bri.switching.helper.LogLoader;
 import id.bri.switching.helper.ResponseCode;
 import id.bri.switching.helper.TextUtil;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.ParseException;
 import java.util.Map;
 
@@ -66,16 +70,25 @@ public class Router {
             //  Hanya melayani MTI 200 & 800
             //  MTI 200 request, 800 
             if(isoMsg.getMTI().equals("0200")){
-            	LogLoader.setInfo(Router.class.getSimpleName(), "Verifying the message..." + requestString);
+            	LogLoader.setInfo(Router.class.getSimpleName(), "Verifying the message...");
             	// Business logic; bit 3 defines inquiry VS transaction
             	// Verify the dictionary to Mas Deni
             	// ----------------------------------------------------
         		// bit 3: Proc. code; bit 48: Card Number
             	// bit x: Status Code, bit y: Flag Card
         		// bit 63: TrxAmtTotal & PointValue (point * 100)
+            	String mti = isoMsg.getMTI();
             	String cardNum = isoMsg.getString(2).trim();
             	String procCode = isoMsg.getString(3).trim();
-            	String trxAmt = isoMsg.getString(4).trim();
+            	String trxOriAmt = isoMsg.getString(4).trim();
+            	String trxChAmt = isoMsg.getString(5).trim();
+            	String trxNetAmt = isoMsg.getString(6).trim();
+            	String trxTime = isoMsg.getString(12).trim();
+            	String trxNii = isoMsg.getString(24).trim();
+            	String rCode = isoMsg.getString(39).trim();
+            	String tId = isoMsg.getString(41).trim();
+            	String mId = isoMsg.getString(42).trim();
+            	String curr = isoMsg.getString(49).trim();
             	
             	
             	//if( isoMsg.getString(3).trim().equals("101010") && 
@@ -102,12 +115,38 @@ public class Router {
             		}
             		
             		END */
-            		for(int i=1; i<=isoMsg.getMaxField(); i++){
-        	            if(isoMsg.hasField(i))
-        	                System.out.println(i+"='"+isoMsg.getString(i)+"'");
-        	        	}
-            		System.out.println("C:"+cardNum+"|PC:"+procCode+"|T:"+trxAmt);
-            		LogLoader.setInfo(Router.class.getSimpleName(), "Proc Code: 101010");
+            		
+            		//TEST
+            		Statement stm = null;
+            		int rows = 0;
+            		try {	    	
+            	    	String db_user = "pointman"; String db_pass = "point2015";
+            	       
+            	        Class.forName("com.mysql.jdbc.Driver");
+            	        String url = "jdbc:mysql://128.199.102.160:3306/clcb_module_dev";
+            	        Connection con = DriverManager.getConnection(url, db_user, db_pass);
+            	        
+            	        String insertActiveMQ = "INSERT INTO `clcb_module_dev`.`activemq` " + 
+            	        						"(`mti`, `ch_cardnum`, `proc_code`, `trx_ori_amt`, `trx_ch_amt`, `trx_net_amt`, `trx_curr`, `trx_time`, `trx_nii`, `res_code`, `t_id`, `m_id`)" + 
+            	        						" VALUES ('"+ mti +"', '"+ cardNum +"', '"+ procCode +"', '"+ trxOriAmt  +"', '"+
+            	        						trxChAmt +"', '"+ trxNetAmt +"', '"+ curr +"', '"+ trxTime +"', '"+ trxNii +"', '"+ rCode +"', '"+ tId +"', '"+ mId +"')";
+            	        stm = con.createStatement();
+                        rows = stm.executeUpdate(insertActiveMQ);
+                        
+                        if (rows > 0){
+                    	   System.out.println("");
+                    	   System.out.print("Inserting activeMQ to DB is successful for: ");
+                    	   System.out.println(requestString); 
+                        }
+
+                	} catch (SQLException e) {
+                		e.printStackTrace();
+                	} catch (ClassNotFoundException e) {
+            			e.printStackTrace();
+            		}
+            		
+            		//System.out.println("C:"+cardNum+"|PC:"+procCode+"|T:"+trxAmt);
+            		LogLoader.setInfo(Router.class.getSimpleName(), " in 101010 Proc Code");
             	}
             	else if(procCode.equals("303030")) {
             		// INQUIRY
@@ -131,7 +170,7 @@ public class Router {
             			//Do something if there's no point available/Card is inactive/Card is not found
             		}
             		
-            		LogLoader.setInfo(Router.class.getSimpleName(), "Proc Code: 303030");
+            		LogLoader.setInfo(Router.class.getSimpleName(), " in 303030 Proc Code");
                 	
             	}
             	

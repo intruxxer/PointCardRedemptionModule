@@ -56,7 +56,7 @@ public class MQServer implements MessageListener {
 	
 	public synchronized void openConnection(String mqUrl) {
         try {        	
-	    	//Koneksi ke activeMQ
+	    	//Connection to activeMQ
 	    	ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(mqUrl);
 	    	this.connection = connectionFactory.createConnection();
 	        this.connection.start();
