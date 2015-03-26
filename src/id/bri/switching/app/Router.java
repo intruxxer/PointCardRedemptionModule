@@ -2,7 +2,7 @@
  * Router
  *
  * Class yang berfungsi untuk memvalidasi tipe message dan mengarahkan kepada
- * class sub proses transaksi, seperti inquiry atau payment/redemption
+ * class sub proses transaksi, seperti point inquiry atau point payment/redemption
  *
  * @package		id.bri.switching.app
  * @author		PSD Team
@@ -57,7 +57,7 @@ public class Router {
     
     public static synchronized String startRouter(String requestString) {
         //  Menampilkan pesan masuk
-        LogLoader.setInfo(Router.class.getSimpleName(), "Msg to be verified : " + requestString);
+        LogLoader.setInfo(Router.class.getSimpleName(), "Msg is to be verified.. ");
         String response = "";
         //  try catch ISOMsg
         try {
@@ -72,7 +72,7 @@ public class Router {
             if(isoMsg.getMTI().equals("0200")){
             	LogLoader.setInfo(Router.class.getSimpleName(), "Verifying the message...");
             	// Business logic; bit 3 defines inquiry VS transaction
-            	// Verify the dictionary to Mas Deni
+            	// Verify the dictionary of bits to PSW Team
             	// ----------------------------------------------------
         		// bit 3: Proc. code; bit 48: Card Number
             	// bit x: Status Code, bit y: Flag Card
@@ -91,8 +91,7 @@ public class Router {
             	String curr = isoMsg.getString(49).trim();
             	
             	
-            	//if( isoMsg.getString(3).trim().equals("101010") && 
-            	//    isoMsg.getString(63).trim().equals("POINT")  )
+            	//if ( isoMsg.getString(3).trim().equals("101010") && isoMsg.getString(63).trim().equals("POINT")  )
             	if(procCode.equals("101010")) {
             		/* START
             		 * 
@@ -116,9 +115,11 @@ public class Router {
             		
             		END */
             		
-            		//TEST
+            		//DB exploration
+            		//int rows = 0;
+            		ResultSet rs = null;
             		Statement stm = null;
-            		int rows = 0;
+            		
             		try {	    	
             	    	String db_user = "pointman"; String db_pass = "point2015";
             	       
@@ -126,17 +127,25 @@ public class Router {
             	        String url = "jdbc:mysql://128.199.102.160:3306/clcb_module_dev";
             	        Connection con = DriverManager.getConnection(url, db_user, db_pass);
             	        
-            	        String insertActiveMQ = "INSERT INTO `clcb_module_dev`.`activemq` " + 
-            	        						"(`mti`, `ch_cardnum`, `proc_code`, `trx_ori_amt`, `trx_ch_amt`, `trx_net_amt`, `trx_curr`, `trx_time`, `trx_nii`, `res_code`, `t_id`, `m_id`)" + 
-            	        						" VALUES ('"+ mti +"', '"+ cardNum +"', '"+ procCode +"', '"+ trxOriAmt  +"', '"+
-            	        						trxChAmt +"', '"+ trxNetAmt +"', '"+ curr +"', '"+ trxTime +"', '"+ trxNii +"', '"+ rCode +"', '"+ tId +"', '"+ mId +"')";
+            	        //String insertActiveMQ = "INSERT INTO `clcb_module_dev`.`activemq` " + 
+            	        //						"(`mti`, `ch_cardnum`, `proc_code`, `trx_ori_amt`, `trx_ch_amt`, `trx_net_amt`, `trx_curr`, `trx_time`, `trx_nii`, `res_code`, `t_id`, `m_id`)" + 
+            	        //						" VALUES ('"+ mti +"', '"+ cardNum +"', '"+ procCode +"', '"+ trxOriAmt  +"', '"+
+            	        //						trxChAmt +"', '"+ trxNetAmt +"', '"+ curr +"', '"+ trxTime +"', '"+ trxNii +"', '"+ rCode +"', '"+ tId +"', '"+ mId +"')";
+            	        
+            	        String queryPointActiveMQ = "SELECT LB_CP_PAS_CURR_BAL FROM `clcb_module_dev`.`lbcrdext` WHERE LB_CARD_NMBR = '" + cardNum + "'";
+            	        
             	        stm = con.createStatement();
-                        rows = stm.executeUpdate(insertActiveMQ);
+                        //rows = stm.executeUpdate(insertActiveMQ);
+            	        rs = stm.executeQuery(queryPointActiveMQ);
+            	        
                         
-                        if (rows > 0){
+                        //if (rows > 0){
+                    	//   System.out.println("");
+                    	//   System.out.print("Inserting activeMQ to DB is successful for: "+ requestString);
+                        //}
+            	        while (rs.next()){
                     	   System.out.println("");
-                    	   System.out.print("Inserting activeMQ to DB is successful for: ");
-                    	   System.out.println(requestString); 
+                    	   System.out.print("Inserting activeMQ to DB is successful for: "+ requestString);
                         }
 
                 	} catch (SQLException e) {
@@ -146,7 +155,7 @@ public class Router {
             		}
             		
             		//System.out.println("C:"+cardNum+"|PC:"+procCode+"|T:"+trxAmt);
-            		LogLoader.setInfo(Router.class.getSimpleName(), " in 101010 Proc Code");
+            		LogLoader.setInfo(Router.class.getSimpleName(), " is in 101010 Proc Code");
             	}
             	else if(procCode.equals("303030")) {
             		// INQUIRY
@@ -170,10 +179,12 @@ public class Router {
             			//Do something if there's no point available/Card is inactive/Card is not found
             		}
             		
-            		LogLoader.setInfo(Router.class.getSimpleName(), " in 303030 Proc Code");
+            		LogLoader.setInfo(Router.class.getSimpleName(), " is in 303030 Proc Code");
                 	
             	}
             	
+            	//Set response Code, set response MTI accordingly
+            	isoMsg.set(39, "10");
             	isoMsg.setResponseMTI();
                 response = new String(isoMsg.pack());
 

@@ -83,14 +83,14 @@ public class MQServer implements MessageListener {
 			this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);  
 			Destination requestQueue = this.session.createQueue(messageQueueRequest);
 			MessageConsumer consumer = this.session.createConsumer(requestQueue);
-	        consumer.setMessageListener(this);
+	        consumer.setMessageListener(this); // Trigger this.onMessage(Message message)
 	        
 			//This messageQueueProducer() is producer's instance being used later on  [when void onMessage() triggered],
 			//because void onMessage() is triggered automatically due to its nature as a must-be-override interface;
 			//This approach is carried out as a way of global variable for void onMessage() to determine
 			//MQ Topic to which an MQ Server will put a response to.
 			this.messageQueueProducer = messageQueueResponse;
-	        LogLoader.setInfo(MQServer.class.getSimpleName(), "Listener on");
+	        LogLoader.setInfo(MQServer.class.getSimpleName(), "Listener: ON");
 						
 		} catch (JMSException e) {
 			LogLoader.setError(MQServer.class.getSimpleName(), e);
@@ -142,7 +142,7 @@ public class MQServer implements MessageListener {
 	                
 	                //Send the response to the Destination              
 	    	        this.replyProducer.send(response);
-	    	        LogLoader.setInfo(MQServer.class.getSimpleName(), "Sending verification message "+result+" is success");
+	    	        LogLoader.setInfo(MQServer.class.getSimpleName(), "Sending verification message: success. ");
                 } else {
                 	LogLoader.setInfo(MQServer.class.getSimpleName(), "There is incoming message, but no response needed");
                 }
